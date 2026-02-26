@@ -71,35 +71,14 @@ const SCENE_PROMPTS = {
 // API CALLS
 // ═══════════════════════════════════════════════════════════════
 async function generateStoryText(name, adventure, trait) {
-  const prompt = `You are a beloved children's storybook author. Write a personalized story.
-
-Child's name: ${name}
-Adventure: ${adventure.title} — set in ${adventure.scene}
-Trait: ${trait}
-
-Write EXACTLY 5 story pages as a JSON object. Each page: 2-3 vivid sentences for ages 4-8. The story must:
-- Star ${name} as the hero on every page
-- Show how being ${trait.toLowerCase()} is the key to success
-- Follow: discovery → journey → challenge → triumph → celebration
-- Use magical sensory details kids love (sparkles, sounds, colors, textures)
-- End with ${name} celebrated as a legend
-
-Respond with ONLY valid JSON. No markdown. No backticks.
-{"pages":["page1","page2","page3","page4","page5"],"title":"short evocative title"}`;
-
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }],
-      }),
+      body: JSON.stringify({ name, adventure: { title: adventure.title, scene: adventure.scene }, trait }),
     });
-    const data = await res.json();
-    const raw = (data.content?.find(b => b.type === "text")?.text || "").replace(/```json|```/g, "").trim();
-    return JSON.parse(raw);
+    if (!res.ok) return null;
+    return await res.json();
   } catch {
     return null;
   }
